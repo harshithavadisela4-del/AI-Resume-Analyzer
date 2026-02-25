@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Resume Analyzer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: #fff;
+      width: 480px;
+      padding: 35px 40px;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
+
+    h1 {
+      color: #1976d2;
+      margin-bottom: 8px;
+      font-size: 28px;
+    }
+
+    p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      font-weight: 600;
+      color: #1976d2;
+      margin-top: 15px;
+      margin-bottom: 5px;
+    }
+
+    input[type="file"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0 15px 0;
+      border: 2px solid #90caf9;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: 0.3s ease;
+    }
+
+    input[type="file"]:hover,
+    textarea:focus {
+      border-color: #1976d2;
+      outline: none;
+    }
+
+    textarea {
+      height: 120px;
+      resize: none;
+    }
+
+    button {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      padding: 12px 35px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: #0d47a1;
+    }
+
+    #loader {
+      display: none;
+      margin: 15px auto;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #1976d2;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #result {
+      margin-top: 20px;
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 10px;
+      display: none;
+      text-align: left;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #score {
+      font-weight: bold;
+      color: #0d47a1;
+      font-size: 18px;
+    }
+
+    #missingSkills, #suggestions {
+      color: #333;
+      font-size: 15px;
+      margin-top: 10px;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #555;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Resume Analyzer</h1>
+    <p>Upload your resume and paste the job description to get AI-based insights.</p>
+
+    <form id="analyzeForm">
+      <label for="resume">📄 Upload Resume (PDF/DOCX):</label>
+      <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required />
+
+      <label for="jobDesc">🧾 Paste Job Description:</label>
+      <textarea id="jobDesc" name="jobDesc" placeholder="Enter job description..." required></textarea>
+
+      <button type="submit">Analyze Resume</button>
+    </form>
+
+    <div id="loader"></div>
+
+    <div id="result">
+      <h3>📊 Analysis Result</h3>
+      <p id="score"></p>
+      <p id="missingSkills"></p>
+      <p id="suggestions"></p>
+    </div>
+
+    <footer>Made with  by Peers</footer>
+  </div>
+
+  <script>
+    const form = document.getElementById('analyzeForm');
+    const resultDiv = document.getElementById('result');
+    const loader = document.getElementById('loader');
+    const scoreEl = document.getElementById('score');
+    const missingEl = document.getElementById('missingSkills');
+    const suggestionEl = document.getElementById('suggestions');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      resultDiv.style.display = 'none';
+      loader.style.display = 'block';
+
+      const formData = new FormData();
+      formData.append('resume', document.getElementById('resume').files[0]);
+      formData.append('jobDesc', document.getElementById('jobDesc').value);
+
+      try {
+        // ✅ FIXED ENDPOINT — use relative path so it works locally
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        loader.style.display = 'none';
+        resultDiv.style.display = 'block';
+
+        scoreEl.innerText = `Match Score: ${data.score}%`;
+        missingEl.innerText = `Missing Skills: ${data.missingSkills.join(', ') || 'None'}`;
+        suggestionEl.innerText = `Suggestions: ${data.suggestions || 'Looks great! 😄'}`;
+
+      } catch (error) {
+        loader.style.display = 'none';
+        alert('Error analyzing resume. Please check backend connection.');
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>
